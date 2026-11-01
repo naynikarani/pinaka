@@ -6,12 +6,21 @@ const findings = [
   { name: "Over-permissive IAM role", resource: "admin-role-dev", severity: "High", status: "Open" },
   { name: "Unencrypted database", resource: "customer-db", severity: "Medium", status: "Review" },
   { name: "Unrestricted network access", resource: "web-server-02", severity: "High", status: "Open" },
-];
+] as const;
 
-const navigation = ["Overview", "Findings", "Attack Paths", "AI Recommendations", "Fix Simulation"];
+const navigation = [
+  { label: "Overview", icon: "▦" },
+  { label: "Findings", icon: "⚑" },
+  { label: "Attack Paths", icon: "⌘" },
+  { label: "AI Recommendations", icon: "✧" },
+  { label: "Fix Simulation", icon: "◉" },
+] as const;
+
+type NavigationItem = (typeof navigation)[number]["label"];
+type GraphNodeType = "red" | "yellow" | "green";
 
 function App() {
-  const [active, setActive] = useState("Overview");
+  const [active, setActive] = useState<NavigationItem>("Overview");
 
   return (
     <div className="app">
@@ -31,15 +40,15 @@ function App() {
 
         <p className="nav-label">MAIN MENU</p>
         <nav>
-          {navigation.map((item, index) => (
+          {navigation.map((item) => (
             <button
-              key={item}
-              className={active === item ? "nav-item active" : "nav-item"}
-              onClick={() => setActive(item)}
+              key={item.label}
+              className={active === item.label ? "nav-item active" : "nav-item"}
+              onClick={() => setActive(item.label)}
             >
-              <span>{["▦", "⚑", "⌘", "✧", "◉"][index]}</span>
-              {item}
-              {item === "Findings" && <b>4</b>}
+              <span>{item.icon}</span>
+              {item.label}
+              {item.label === "Findings" && <b>4</b>}
             </button>
           ))}
         </nav>
@@ -109,12 +118,12 @@ function App() {
                   <path className="edge risk-edge" d="M130 145 L310 145 L490 75 L700 145" />
                   <path className="edge safe-edge" d="M310 145 L490 230 L700 145" />
                   <path className="edge" d="M130 145 L310 245" />
-                  <Node x="130" y="145" label="Internet" sub="External" type="red" />
-                  <Node x="310" y="145" label="Web Server" sub="Compute" type="yellow" />
-                  <Node x="490" y="75" label="IAM Role" sub="Identity" type="red" />
-                  <Node x="700" y="145" label="Storage" sub="Data" type="red" />
-                  <Node x="310" y="245" label="Firewall" sub="Network" type="green" />
-                  <Node x="490" y="230" label="Database" sub="Data" type="yellow" />
+                  <Node x={130} y={145} label="Internet" sub="External" type="red" />
+                  <Node x={310} y={145} label="Web Server" sub="Compute" type="yellow" />
+                  <Node x={490} y={75} label="IAM Role" sub="Identity" type="red" />
+                  <Node x={700} y={145} label="Storage" sub="Data" type="red" />
+                  <Node x={310} y={245} label="Firewall" sub="Network" type="green" />
+                  <Node x={490} y={230} label="Database" sub="Data" type="yellow" />
                 </svg>
                 <div className="graph-footer">
                   <span>6 sample resources connected</span>
@@ -216,17 +225,33 @@ function App() {
   );
 }
 
-function Stat({ label, value, suffix, note, icon }) {
+interface StatProps {
+  label: string;
+  value: string;
+  suffix?: string;
+  note: string;
+  icon: string;
+}
+
+function Stat({ label, value, suffix, note, icon }: StatProps) {
   return (
     <div className="stat-card">
       <div className="stat-top"><span>{label}</span><i>{icon}</i></div>
-      <div className="stat-value">{value}<small>{suffix}</small></div>
+      <div className="stat-value">{value}{suffix && <small>{suffix}</small>}</div>
       <p>{note}</p>
     </div>
   );
 }
 
-function Node({ x, y, label, sub, type }) {
+interface NodeProps {
+  x: number;
+  y: number;
+  label: string;
+  sub: string;
+  type: GraphNodeType;
+}
+
+function Node({ x, y, label, sub, type }: NodeProps) {
   return (
     <g>
       <rect x={x - 65} y={y - 29} width="130" height="58" rx="10" className={`node node-${type}`} />
